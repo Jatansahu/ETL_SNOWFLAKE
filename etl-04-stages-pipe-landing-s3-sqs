@@ -1,0 +1,73 @@
+------------------PART 04--------------------
+-- TASKS: 
+-- 1. Create stages and pipes in landing zone schemas.
+-- 2. Verift the S3 bucket + notification services.
+
+     --Create an integration object for the external stage
+   create or replace storage integration JATAN_integration
+    type = external_stage
+    storage_provider = s3
+    enabled = true
+    storage_aws_role_arn = 'arn:aws:iam::068724500667:role/etl-snowflake-project'
+    storage_allowed_locations = ('s3://etl-snowflake-project/delta/') ;
+
+
+    DESC INTEGRATION JATAN_integration;
+
+
+-- Step - Create Object and list them
+    -- order stage
+    create OR replace stage delta_orders_s3
+        url = 's3://etl-snowflake-project/delta/orders' 
+        STORAGE_INTEGRATION = JATAN_integration
+        comment = 'feed delta order files';
+    -- item stage
+    create or replace stage delta_items_s3
+        url = 's3://etl-snowflake-project/delta/items' 
+        STORAGE_INTEGRATION = JATAN_integration
+        comment = 'feed delta item files';
+
+    -- customer stage
+    create or replace stage delta_customer_s3
+        url = 's3://etl-snowflake-project/delta/customers' 
+        STORAGE_INTEGRATION = JATAN_integration
+        comment = 'feed delta customer files';
+        
+    show stages;
+
+
+
+
+    -- Create Pipe Objects for each of the table
+  
+  create or replace pipe order_pipe
+    auto_ingest = true
+    as 
+        copy into landing_order from @delta_orders_s3
+        file_format = (type=csv COMPRESSION=none skip_header = 1)
+        pattern='.*order.*[.]csv'
+        ON_ERROR = 'CONTINUE';
+
+   create or replace pipe item_pipe
+        auto_ingest = true
+     as 
+        copy into landing_item from @delta_items_s3
+        file_format = (type=csv COMPRESSION=none skip_header = 1)
+        pattern='.*item.*[.]csv'
+        
+        ON_ERROR = 'CONTINUE';
+
+    create or replace pipe customer_pipe
+        auto_ingest = true
+    as 
+        copy into landing_customer from @delta_customer_s3
+        file_format = (type=csv COMPRESSION=none skip_header = 1)
+        pattern='.*customer.*[.]csv'
+        ON_ERROR = 'CONTINUE';
+
+-- Review Pipe Status
+show pipes;
+    
+    select system$pipe_status('order_pipe');
+    select system$pipe_status('item_pipe');
+    select system$pipe_status('customer_pipe');

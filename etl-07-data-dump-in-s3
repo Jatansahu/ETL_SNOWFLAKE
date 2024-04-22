@@ -1,0 +1,55 @@
+CH19.CURATED_ZONE.CURATED_ORDERCH19.CURATED_ZONE.CURATED_ORDERCH19.LANDING_ZONE.LANDING_ORDERCH19.CURATED_ZONE.CURATED_CUSTOMERCH19.CURATED_ZONE.CURATED_ORDERCH19.CURATED_ZONE.CUSTOMER_CURATED_TSK---------PART - 7----------------
+----------------------DATA DUMP-----------------------
+
+select count(*) from ch19.landing_zone.landing_order; --18 (19) new records + one update
+select count(*) from ch19.landing_zone.landing_item; --21 (22)new records + one update
+select count(*) from ch19.landing_zone.landing_customer; -- 20 (21) new records + one update #
+
+
+select count(*) from ch19.landing_zone.landing_order_stm; 
+select count(*) from ch19.landing_zone.landing_item_stm; 
+select count(*) from ch19.landing_zone.landing_customer_stm; 
+
+
+select count(*) from ch19.curated_zone.curated_order; --18 (19) new records + one update
+select count(*) from ch19.curated_zone.curated_item; --21 (22)new records + one update
+select count(*) from ch19.curated_zone.curated_customer;-- 20 (21) new records + one update #
+
+select count(*) from ch19.consumption_zone.order_fact; --11 (12) new records + one update
+select count(*) from ch19.consumption_zone.item_dim;--21 (22)new records + one update
+select count(*) from ch19.consumption_zone.customer_dim; -- 20 (21) new records + one update #
+
+use schema ch19.consumption_zone;
+select *  from table(information_schema.task_history()) 
+            where name in ('ORDER_FACT_TSK')
+            order by scheduled_time;CH19.CURATED_ZONE.CURATED_ORDER_STM,CH19.CURATED_ZONE.CURATED_ITEM_STM,CH19.CURATED_ZONE.CURATED_CUSTOMER_STM;
+
+-- lets validate the change using time travel feature
+select * from ch19.consumption_zone.customer_dim where customer_id = 'AAAAAAAAPOJJJDAA'
+union all
+select * from ch19.consumption_zone.customer_dim at(offset => -60*10) where customer_id = 'AAAAAAAAPOJJJDAA';
+
+
+select * from ch19.consumption_zone.item_dim where item_id = 'AAAAAAAACDLBXPPP'
+union all
+select * from ch19.consumption_zone.item_dim at(offset => -60*10) where item_id = 'AAAAAAAACDLBXPPP';
+
+
+
+-- select * from ch19.landing_zone.landing_customer; -- 20 (21) new records + one update #
+-- select * from ch19.curated_zone.curated_customer;
+
+DELETE FROM CH19.LANDING_ZONE.LANDING_CUSTOMER WHERE CUSTOMER_ID = 'CUSTOMER_ID' or customer_id= 'AAAAAAAALKBJCPAA' or customer_id= 'AAAAAAAAPOJJJDAA';
+
+
+DELETE FROM CH19.LANDING_ZONE.LANDING_ORDER WHERE ITEM_ID = 'AAAAAAAAGCLBYPPP';
+
+DELETE FROM CH19.LANDING_ZONE.LANDING_ITEM WHERE  ITEM_ID ='AAAAAAAAGCLBYPPP';
+
+
+
+-- Problem faced :
+-- 1. S3 credential not provided in part 4 ( storage integration).
+-- 2. Scheduling task query error in part 5(in customer table).
+-- 3. Conditional error in part 3 (getting 0 row after filtering in consumption zone order table because of less data, change filtering condition)
+-- 4. Not set delimiter in file formating for csv file loading added skip header= 1; 

@@ -1,0 +1,80 @@
+- CH19.LANDING_ZONE.LANDING_ORDER
+
+------PART 01-----------------
+
+-- TASK 1.Create 3 schemas (3 logically layers or zones) 
+
+-- TASK 2.Create table (DDL) under landing zone schemas. 
+
+-- TASK 3.Initial data load via Web UI. 
+
+-- TASK 4.Verify the tables and data. 
+
+------TASK 01-------------
+-- Create Database & Schemas
+
+-- The first step is to create database and schemas where all our tables and other objects will reside.
+
+create database ch19;
+create or replace schema landing_zone;
+create or replace schema curated_zone;
+create or replace schema consumption_zone;
+
+--------TASK 02-------------------
+-- Create Order Table (Landing Zone)
+SHOW SCHEMAS;
+
+-- Now all our schemas are create, we must change the context to ch19.landing_zone and create customer transient table.
+
+create or replace transient table landing_item (
+        item_id varchar,
+        item_desc varchar,
+        start_date varchar,
+        end_date varchar,
+        price varchar,
+        item_class varchar,
+        item_CATEGORY varchar
+) comment ='this is item table with in landing schema';
+
+create or replace transient table landing_customer (
+    customer_id varchar,
+    salutation varchar,
+    first_name varchar,
+    last_name varchar,
+    birth_day varchar,
+    birth_month varchar,
+    birth_year varchar,
+    birth_country varchar,
+    email_address varchar
+) comment ='this is customer table with in landing schema';
+
+create or replace transient table landing_order (
+    order_date varchar,
+    order_time varchar,
+    item_id varchar,
+    item_desc varchar,
+    customer_id varchar,
+    salutation varchar,
+    first_name varchar,
+    last_name varchar,
+    store_id varchar,
+    store_name varchar,
+    order_quantity varchar,
+    sale_price varchar,
+    disount_amt varchar,
+    coupon_amt varchar,
+    net_paid varchar,
+    net_paid_tax varchar,
+    net_profit varchar
+) comment ='this is order table with in landing schema';
+    
+create or replace file format my_csv_vi_webui
+type = 'csv' 
+compression = 'auto' 
+field_delimiter = ',' 
+record_delimiter = '\n' 
+skip_header = 1
+field_optionally_enclosed_by = '\042' 
+null_if = ('\\N');
+
+-- In part-01, we have created the 3 schemas & tables in landing schema. Now we will create tables for curated zone and also load data using standard SQL statements.
